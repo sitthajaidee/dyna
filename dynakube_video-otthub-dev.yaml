@@ -18,7 +18,7 @@ metadata:
 spec:
   apiUrl: https://gxk996.dynatrace-managed.com:9999/e/631b553f-73c8-49ed-9e11-85f7ad7a8acc/api
   networkZone: video-otthub-dev-20230920
-  enableIstio: true
+  enableIstio: false
   oneAgent:
     classicFullStack:
       nodeSelector:
