@@ -1,0 +1,57 @@
+# The template for this file is available on GitHub: https://github.com/Dynatrace/dynatrace-operator/blob/v0.13.0/assets/samples/classicFullStack.yaml
+apiVersion: v1
+data:
+  apiToken: ZHQwYzAxLlFLUUdDQkZWM1BRWEZXMzU1NVlGTUdJSi5XVTdJSzJCTTdCQlg2M0dIQ0ROQ0pXSFJMRVhHWlE3TVJPSEdDS1g2WldDM0pEQzJHVEJNRlFTSEhPTDJZWFhC
+  dataIngestToken: ZHQwYzAxLjJVTVlLUkhRU1A2TkFaWFRGQUkzWEU2Ny43TzVVWjQyN0MyNlo1Q0xKVExFV083Uk80WUlVNTVIQ1RXM083UzRDQzNWMkVQVktURDRNUEFNVElHU0NUTEpB
+kind: Secret
+metadata:
+  name: video-otthub-dev-20230920
+  namespace: dynatrace
+type: Opaque
+---
+apiVersion: dynatrace.com/v1beta1
+kind: DynaKube
+metadata:
+  name: video-otthub-dev-20230920
+  namespace: dynatrace
+  annotations:
+    feature.dynatrace.com/automatic-kubernetes-api-monitoring: "true"
+    feature.dynatrace.com/activegate-authtoken: "true"
+spec:
+  apiUrl: https://gxk996.dynatrace-managed.com:9999/e/631b553f-73c8-49ed-9e11-85f7ad7a8acc/api
+  skipCertCheck: true
+  networkZone: video-otthub-dev-20230920
+  enableIstio: False
+  oneAgent:
+    classicFullStack:
+      image: ""
+      nodeSelector:
+        agentpool: vdootthubdev
+      tolerations:
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/master
+          operator: Exists
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/control-plane
+          operator: Exists
+      env:
+        - name: ONEAGENT_ENABLE_VOLUME_STORAGE
+          value: "false"
+      args:
+        - --set-host-group=video-otthub-dev-20230920
+  activeGate:
+    capabilities:
+      - routing
+      - kubernetes-monitoring
+      - dynatrace-api
+    image: ""
+    nodeSelector:
+      agentpool: vdootthubdev
+    resources:
+      requests:
+        cpu: 500m
+        memory: 512Mi
+      limits:
+        cpu: 1000m
+        memory: 1.5Gi
+    group: video-otthub-dev-20230920
