@@ -1,5 +1,6 @@
 ---
 # Source: dynatrace-operator/templates/Common/webhook/poddisruptionbudget-webhook.yaml
+# v1 version supported since k8s 1.21
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
@@ -32,7 +33,7 @@ metadata:
   namespace: dynatrace
   labels:
     app.kubernetes.io/name: dynatrace-operator
-    app.kubernetes.io/version: "0.9.1"
+    app.kubernetes.io/version: "0.13.0"
     app.kubernetes.io/component: activegate
 ---
 # Source: dynatrace-operator/templates/Common/kubernetes-monitoring/serviceaccount-kubernetes-monitoring.yaml
@@ -56,10 +57,10 @@ metadata:
   namespace: dynatrace
   labels:
     app.kubernetes.io/name: dynatrace-operator
-    app.kubernetes.io/version: "0.9.1"
+    app.kubernetes.io/version: "0.13.0"
     app.kubernetes.io/component: activegate
 ---
-# Source: dynatrace-operator/templates/Common/oneagent/serviceaccount-oneagent-privileged.yaml
+# Source: dynatrace-operator/templates/Common/oneagent/serviceaccount-oneagent.yaml
 # Copyright 2021 Dynatrace LLC
 
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -76,36 +77,11 @@ metadata:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: dynatrace-dynakube-oneagent-privileged
+  name: dynatrace-dynakube-oneagent
   namespace: dynatrace
   labels:
     app.kubernetes.io/name: dynatrace-operator
-    app.kubernetes.io/version: "0.9.1"
-    app.kubernetes.io/component: oneagent
-automountServiceAccountToken: false
----
-# Source: dynatrace-operator/templates/Common/oneagent/serviceaccount-oneagent-unprivileged.yaml
-# Copyright 2021 Dynatrace LLC
-
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-
-#     http://www.apache.org/licenses/LICENSE-2.0
-
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: dynatrace-dynakube-oneagent-unprivileged
-  namespace: dynatrace
-  labels:
-    app.kubernetes.io/name: dynatrace-operator
-    app.kubernetes.io/version: "0.9.1"
+    app.kubernetes.io/version: "0.13.0"
     app.kubernetes.io/component: oneagent
 automountServiceAccountToken: false
 ---
@@ -130,7 +106,7 @@ metadata:
   namespace: dynatrace
   labels:
     app.kubernetes.io/name: dynatrace-operator
-    app.kubernetes.io/version: "0.9.1"
+    app.kubernetes.io/version: "0.13.0"
     app.kubernetes.io/component: operator
 ---
 # Source: dynatrace-operator/templates/Common/webhook/serviceaccount-webhook.yaml
@@ -154,7 +130,7 @@ metadata:
   namespace: dynatrace
   labels:
     app.kubernetes.io/name: dynatrace-operator
-    app.kubernetes.io/version: "0.9.1"
+    app.kubernetes.io/version: "0.13.0"
     app.kubernetes.io/component: webhook
 ---
 # Source: dynatrace-operator/templates/Common/crd/dynatrace-operator-crd.yaml
@@ -162,7 +138,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.9.0
+    controller-gen.kubebuilder.io/version: v0.12.1
   name: dynakubes.dynatrace.com
 spec:
   conversion:
@@ -291,6 +267,7 @@ spec:
                               required:
                               - key
                               type: object
+                              x-kubernetes-map-type: atomic
                             fieldRef:
                               description: 'Selects a field of the pod: supports metadata.name,
                                 metadata.namespace, `metadata.labels[''<KEY>'']`,
@@ -309,6 +286,7 @@ spec:
                               required:
                               - fieldPath
                               type: object
+                              x-kubernetes-map-type: atomic
                             resourceFieldRef:
                               description: 'Selects a resource of the container: only
                                 resources limits and requests (limits.cpu, limits.memory,
@@ -333,6 +311,7 @@ spec:
                               required:
                               - resource
                               type: object
+                              x-kubernetes-map-type: atomic
                             secretKeyRef:
                               description: Selects a key of a secret in the pod's
                                 namespace
@@ -353,6 +332,7 @@ spec:
                               required:
                               - key
                               type: object
+                              x-kubernetes-map-type: atomic
                           type: object
                       required:
                       - name
@@ -379,6 +359,28 @@ spec:
                     description: 'Optional: define resources requests and limits for
                       single pods'
                     properties:
+                      claims:
+                        description: "Claims lists the names of resources, defined
+                          in spec.resourceClaims, that are used by this container.
+                          \n This is an alpha field and requires enabling the DynamicResourceAllocation
+                          feature gate. \n This field is immutable. It can only be
+                          set for containers."
+                        items:
+                          description: ResourceClaim references one entry in PodSpec.ResourceClaims.
+                          properties:
+                            name:
+                              description: Name must match the name of one entry in
+                                pod.spec.resourceClaims of the Pod where this field
+                                is used. It makes that resource available inside a
+                                container.
+                              type: string
+                          required:
+                          - name
+                          type: object
+                        type: array
+                        x-kubernetes-list-map-keys:
+                        - name
+                        x-kubernetes-list-type: map
                       limits:
                         additionalProperties:
                           anyOf:
@@ -534,6 +536,7 @@ spec:
                               required:
                               - key
                               type: object
+                              x-kubernetes-map-type: atomic
                             fieldRef:
                               description: 'Selects a field of the pod: supports metadata.name,
                                 metadata.namespace, `metadata.labels[''<KEY>'']`,
@@ -552,6 +555,7 @@ spec:
                               required:
                               - fieldPath
                               type: object
+                              x-kubernetes-map-type: atomic
                             resourceFieldRef:
                               description: 'Selects a resource of the container: only
                                 resources limits and requests (limits.cpu, limits.memory,
@@ -576,6 +580,7 @@ spec:
                               required:
                               - resource
                               type: object
+                              x-kubernetes-map-type: atomic
                             secretKeyRef:
                               description: Selects a key of a secret in the pod's
                                 namespace
@@ -596,6 +601,7 @@ spec:
                               required:
                               - key
                               type: object
+                              x-kubernetes-map-type: atomic
                           type: object
                       required:
                       - name
@@ -624,6 +630,28 @@ spec:
                     description: 'Optional: define resources requests and limits for
                       single ActiveGate pods'
                     properties:
+                      claims:
+                        description: "Claims lists the names of resources, defined
+                          in spec.resourceClaims, that are used by this container.
+                          \n This is an alpha field and requires enabling the DynamicResourceAllocation
+                          feature gate. \n This field is immutable. It can only be
+                          set for containers."
+                        items:
+                          description: ResourceClaim references one entry in PodSpec.ResourceClaims.
+                          properties:
+                            name:
+                              description: Name must match the name of one entry in
+                                pod.spec.resourceClaims of the Pod where this field
+                                is used. It makes that resource available inside a
+                                container.
+                              type: string
+                          required:
+                          - name
+                          type: object
+                        type: array
+                        x-kubernetes-list-map-keys:
+                        - name
+                        x-kubernetes-list-type: map
                       limits:
                         additionalProperties:
                           anyOf:
@@ -790,6 +818,7 @@ spec:
                               required:
                               - key
                               type: object
+                              x-kubernetes-map-type: atomic
                             fieldRef:
                               description: 'Selects a field of the pod: supports metadata.name,
                                 metadata.namespace, `metadata.labels[''<KEY>'']`,
@@ -808,6 +837,7 @@ spec:
                               required:
                               - fieldPath
                               type: object
+                              x-kubernetes-map-type: atomic
                             resourceFieldRef:
                               description: 'Selects a resource of the container: only
                                 resources limits and requests (limits.cpu, limits.memory,
@@ -832,6 +862,7 @@ spec:
                               required:
                               - resource
                               type: object
+                              x-kubernetes-map-type: atomic
                             secretKeyRef:
                               description: Selects a key of a secret in the pod's
                                 namespace
@@ -852,6 +883,7 @@ spec:
                               required:
                               - key
                               type: object
+                              x-kubernetes-map-type: atomic
                           type: object
                       required:
                       - name
@@ -880,6 +912,28 @@ spec:
                     description: 'Optional: define resources requests and limits for
                       single ActiveGate pods'
                     properties:
+                      claims:
+                        description: "Claims lists the names of resources, defined
+                          in spec.resourceClaims, that are used by this container.
+                          \n This is an alpha field and requires enabling the DynamicResourceAllocation
+                          feature gate. \n This field is immutable. It can only be
+                          set for containers."
+                        items:
+                          description: ResourceClaim references one entry in PodSpec.ResourceClaims.
+                          properties:
+                            name:
+                              description: Name must match the name of one entry in
+                                pod.spec.resourceClaims of the Pod where this field
+                                is used. It makes that resource available inside a
+                                container.
+                              type: string
+                          required:
+                          - name
+                          type: object
+                        type: array
+                        x-kubernetes-list-map-keys:
+                        - name
+                        x-kubernetes-list-type: map
                       limits:
                         additionalProperties:
                           anyOf:
@@ -1132,9 +1186,6 @@ spec:
     - jsonPath: .spec.apiUrl
       name: ApiUrl
       type: string
-    - jsonPath: .status.tokens
-      name: Tokens
-      type: string
     - jsonPath: .status.phase
       name: Status
       type: string
@@ -1164,6 +1215,12 @@ spec:
               activeGate:
                 description: General configuration about ActiveGate instances
                 properties:
+                  annotations:
+                    additionalProperties:
+                      type: string
+                    description: 'Optional: Adds additional annotations to the ActiveGate
+                      pods'
+                    type: object
                   capabilities:
                     description: Activegate capabilities enabled (routing, kubernetes-monitoring,
                       metrics-ingest, dynatrace-api)
@@ -1227,6 +1284,7 @@ spec:
                               required:
                               - key
                               type: object
+                              x-kubernetes-map-type: atomic
                             fieldRef:
                               description: 'Selects a field of the pod: supports metadata.name,
                                 metadata.namespace, `metadata.labels[''<KEY>'']`,
@@ -1245,6 +1303,7 @@ spec:
                               required:
                               - fieldPath
                               type: object
+                              x-kubernetes-map-type: atomic
                             resourceFieldRef:
                               description: 'Selects a resource of the container: only
                                 resources limits and requests (limits.cpu, limits.memory,
@@ -1269,6 +1328,7 @@ spec:
                               required:
                               - resource
                               type: object
+                              x-kubernetes-map-type: atomic
                             secretKeyRef:
                               description: Selects a key of a secret in the pod's
                                 namespace
@@ -1289,6 +1349,7 @@ spec:
                               required:
                               - key
                               type: object
+                              x-kubernetes-map-type: atomic
                           type: object
                       required:
                       - name
@@ -1328,6 +1389,28 @@ spec:
                     description: 'Optional: define resources requests and limits for
                       single ActiveGate pods'
                     properties:
+                      claims:
+                        description: "Claims lists the names of resources, defined
+                          in spec.resourceClaims, that are used by this container.
+                          \n This is an alpha field and requires enabling the DynamicResourceAllocation
+                          feature gate. \n This field is immutable. It can only be
+                          set for containers."
+                        items:
+                          description: ResourceClaim references one entry in PodSpec.ResourceClaims.
+                          properties:
+                            name:
+                              description: Name must match the name of one entry in
+                                pod.spec.resourceClaims of the Pod where this field
+                                is used. It makes that resource available inside a
+                                container.
+                              type: string
+                          required:
+                          - name
+                          type: object
+                        type: array
+                        x-kubernetes-list-map-keys:
+                        - name
+                        x-kubernetes-list-type: map
                       limits:
                         additionalProperties:
                           anyOf:
@@ -1453,6 +1536,7 @@ spec:
                                 contains only "value". The requirements are ANDed.
                               type: object
                           type: object
+                          x-kubernetes-map-type: atomic
                         matchLabelKeys:
                           description: MatchLabelKeys is a set of pod label keys to
                             select the pods over which spreading will be calculated.
@@ -1521,7 +1605,7 @@ spec:
                             - Ignore: nodeAffinity/nodeSelector are ignored. All nodes
                             are included in the calculations. \n If this value is
                             nil, the behavior is equivalent to the Honor policy. This
-                            is a alpha-level feature enabled by the NodeInclusionPolicyInPodTopologySpread
+                            is a beta-level feature default enabled by the NodeInclusionPolicyInPodTopologySpread
                             feature flag."
                           type: string
                         nodeTaintsPolicy:
@@ -1531,8 +1615,8 @@ spec:
                             tainted nodes for which the incoming pod has a toleration,
                             are included. - Ignore: node taints are ignored. All nodes
                             are included. \n If this value is nil, the behavior is
-                            equivalent to the Ignore policy. This is a alpha-level
-                            feature enabled by the NodeInclusionPolicyInPodTopologySpread
+                            equivalent to the Ignore policy. This is a beta-level
+                            feature default enabled by the NodeInclusionPolicyInPodTopologySpread
                             feature flag."
                           type: string
                         topologyKey:
@@ -1645,6 +1729,7 @@ spec:
                               required:
                               - key
                               type: object
+                              x-kubernetes-map-type: atomic
                             fieldRef:
                               description: 'Selects a field of the pod: supports metadata.name,
                                 metadata.namespace, `metadata.labels[''<KEY>'']`,
@@ -1663,6 +1748,7 @@ spec:
                               required:
                               - fieldPath
                               type: object
+                              x-kubernetes-map-type: atomic
                             resourceFieldRef:
                               description: 'Selects a resource of the container: only
                                 resources limits and requests (limits.cpu, limits.memory,
@@ -1687,6 +1773,7 @@ spec:
                               required:
                               - resource
                               type: object
+                              x-kubernetes-map-type: atomic
                             secretKeyRef:
                               description: Selects a key of a secret in the pod's
                                 namespace
@@ -1707,6 +1794,7 @@ spec:
                               required:
                               - key
                               type: object
+                              x-kubernetes-map-type: atomic
                           type: object
                       required:
                       - name
@@ -1740,6 +1828,28 @@ spec:
                     description: 'Optional: define resources requests and limits for
                       single ActiveGate pods'
                     properties:
+                      claims:
+                        description: "Claims lists the names of resources, defined
+                          in spec.resourceClaims, that are used by this container.
+                          \n This is an alpha field and requires enabling the DynamicResourceAllocation
+                          feature gate. \n This field is immutable. It can only be
+                          set for containers."
+                        items:
+                          description: ResourceClaim references one entry in PodSpec.ResourceClaims.
+                          properties:
+                            name:
+                              description: Name must match the name of one entry in
+                                pod.spec.resourceClaims of the Pod where this field
+                                is used. It makes that resource available inside a
+                                container.
+                              type: string
+                          required:
+                          - name
+                          type: object
+                        type: array
+                        x-kubernetes-list-map-keys:
+                        - name
+                        x-kubernetes-list-type: map
                       limits:
                         additionalProperties:
                           anyOf:
@@ -1859,6 +1969,7 @@ spec:
                                 contains only "value". The requirements are ANDed.
                               type: object
                           type: object
+                          x-kubernetes-map-type: atomic
                         matchLabelKeys:
                           description: MatchLabelKeys is a set of pod label keys to
                             select the pods over which spreading will be calculated.
@@ -1927,7 +2038,7 @@ spec:
                             - Ignore: nodeAffinity/nodeSelector are ignored. All nodes
                             are included in the calculations. \n If this value is
                             nil, the behavior is equivalent to the Honor policy. This
-                            is a alpha-level feature enabled by the NodeInclusionPolicyInPodTopologySpread
+                            is a beta-level feature default enabled by the NodeInclusionPolicyInPodTopologySpread
                             feature flag."
                           type: string
                         nodeTaintsPolicy:
@@ -1937,8 +2048,8 @@ spec:
                             tainted nodes for which the incoming pod has a toleration,
                             are included. - Ignore: node taints are ignored. All nodes
                             are included. \n If this value is nil, the behavior is
-                            equivalent to the Ignore policy. This is a alpha-level
-                            feature enabled by the NodeInclusionPolicyInPodTopologySpread
+                            equivalent to the Ignore policy. This is a beta-level
+                            feature default enabled by the NodeInclusionPolicyInPodTopologySpread
                             feature flag."
                           type: string
                         topologyKey:
@@ -2026,6 +2137,7 @@ spec:
                       are ANDed.
                     type: object
                 type: object
+                x-kubernetes-map-type: atomic
               networkZone:
                 description: 'Optional: Sets Network Zone for OneAgent and ActiveGate
                   pods'
@@ -2047,6 +2159,28 @@ spec:
                         description: 'Optional: define resources requests and limits
                           for the initContainer'
                         properties:
+                          claims:
+                            description: "Claims lists the names of resources, defined
+                              in spec.resourceClaims, that are used by this container.
+                              \n This is an alpha field and requires enabling the
+                              DynamicResourceAllocation feature gate. \n This field
+                              is immutable. It can only be set for containers."
+                            items:
+                              description: ResourceClaim references one entry in PodSpec.ResourceClaims.
+                              properties:
+                                name:
+                                  description: Name must match the name of one entry
+                                    in pod.spec.resourceClaims of the Pod where this
+                                    field is used. It makes that resource available
+                                    inside a container.
+                                  type: string
+                              required:
+                              - name
+                              type: object
+                            type: array
+                            x-kubernetes-list-map-keys:
+                            - name
+                            x-kubernetes-list-type: map
                           limits:
                             additionalProperties:
                               anyOf:
@@ -2153,6 +2287,7 @@ spec:
                                   required:
                                   - key
                                   type: object
+                                  x-kubernetes-map-type: atomic
                                 fieldRef:
                                   description: 'Selects a field of the pod: supports
                                     metadata.name, metadata.namespace, `metadata.labels[''<KEY>'']`,
@@ -2171,6 +2306,7 @@ spec:
                                   required:
                                   - fieldPath
                                   type: object
+                                  x-kubernetes-map-type: atomic
                                 resourceFieldRef:
                                   description: 'Selects a resource of the container:
                                     only resources limits and requests (limits.cpu,
@@ -2196,6 +2332,7 @@ spec:
                                   required:
                                   - resource
                                   type: object
+                                  x-kubernetes-map-type: atomic
                                 secretKeyRef:
                                   description: Selects a key of a secret in the pod's
                                     namespace
@@ -2217,6 +2354,7 @@ spec:
                                   required:
                                   - key
                                   type: object
+                                  x-kubernetes-map-type: atomic
                               type: object
                           required:
                           - name
@@ -2243,6 +2381,28 @@ spec:
                         description: 'Optional: define resources requests and limits
                           for single pods'
                         properties:
+                          claims:
+                            description: "Claims lists the names of resources, defined
+                              in spec.resourceClaims, that are used by this container.
+                              \n This is an alpha field and requires enabling the
+                              DynamicResourceAllocation feature gate. \n This field
+                              is immutable. It can only be set for containers."
+                            items:
+                              description: ResourceClaim references one entry in PodSpec.ResourceClaims.
+                              properties:
+                                name:
+                                  description: Name must match the name of one entry
+                                    in pod.spec.resourceClaims of the Pod where this
+                                    field is used. It makes that resource available
+                                    inside a container.
+                                  type: string
+                              required:
+                              - name
+                              type: object
+                            type: array
+                            x-kubernetes-list-map-keys:
+                            - name
+                            x-kubernetes-list-type: map
                           limits:
                             additionalProperties:
                               anyOf:
@@ -2396,6 +2556,7 @@ spec:
                                   required:
                                   - key
                                   type: object
+                                  x-kubernetes-map-type: atomic
                                 fieldRef:
                                   description: 'Selects a field of the pod: supports
                                     metadata.name, metadata.namespace, `metadata.labels[''<KEY>'']`,
@@ -2414,6 +2575,7 @@ spec:
                                   required:
                                   - fieldPath
                                   type: object
+                                  x-kubernetes-map-type: atomic
                                 resourceFieldRef:
                                   description: 'Selects a resource of the container:
                                     only resources limits and requests (limits.cpu,
@@ -2439,6 +2601,7 @@ spec:
                                   required:
                                   - resource
                                   type: object
+                                  x-kubernetes-map-type: atomic
                                 secretKeyRef:
                                   description: Selects a key of a secret in the pod's
                                     namespace
@@ -2460,6 +2623,7 @@ spec:
                                   required:
                                   - key
                                   type: object
+                                  x-kubernetes-map-type: atomic
                               type: object
                           required:
                           - name
@@ -2474,6 +2638,28 @@ spec:
                         description: 'Optional: define resources requests and limits
                           for the initContainer'
                         properties:
+                          claims:
+                            description: "Claims lists the names of resources, defined
+                              in spec.resourceClaims, that are used by this container.
+                              \n This is an alpha field and requires enabling the
+                              DynamicResourceAllocation feature gate. \n This field
+                              is immutable. It can only be set for containers."
+                            items:
+                              description: ResourceClaim references one entry in PodSpec.ResourceClaims.
+                              properties:
+                                name:
+                                  description: Name must match the name of one entry
+                                    in pod.spec.resourceClaims of the Pod where this
+                                    field is used. It makes that resource available
+                                    inside a container.
+                                  type: string
+                              required:
+                              - name
+                              type: object
+                            type: array
+                            x-kubernetes-list-map-keys:
+                            - name
+                            x-kubernetes-list-type: map
                           limits:
                             additionalProperties:
                               anyOf:
@@ -2514,6 +2700,28 @@ spec:
                         description: 'Optional: define resources requests and limits
                           for single pods'
                         properties:
+                          claims:
+                            description: "Claims lists the names of resources, defined
+                              in spec.resourceClaims, that are used by this container.
+                              \n This is an alpha field and requires enabling the
+                              DynamicResourceAllocation feature gate. \n This field
+                              is immutable. It can only be set for containers."
+                            items:
+                              description: ResourceClaim references one entry in PodSpec.ResourceClaims.
+                              properties:
+                                name:
+                                  description: Name must match the name of one entry
+                                    in pod.spec.resourceClaims of the Pod where this
+                                    field is used. It makes that resource available
+                                    inside a container.
+                                  type: string
+                              required:
+                              - name
+                              type: object
+                            type: array
+                            x-kubernetes-list-map-keys:
+                            - name
+                            x-kubernetes-list-type: map
                           limits:
                             additionalProperties:
                               anyOf:
@@ -2663,6 +2871,7 @@ spec:
                                   required:
                                   - key
                                   type: object
+                                  x-kubernetes-map-type: atomic
                                 fieldRef:
                                   description: 'Selects a field of the pod: supports
                                     metadata.name, metadata.namespace, `metadata.labels[''<KEY>'']`,
@@ -2681,6 +2890,7 @@ spec:
                                   required:
                                   - fieldPath
                                   type: object
+                                  x-kubernetes-map-type: atomic
                                 resourceFieldRef:
                                   description: 'Selects a resource of the container:
                                     only resources limits and requests (limits.cpu,
@@ -2706,6 +2916,7 @@ spec:
                                   required:
                                   - resource
                                   type: object
+                                  x-kubernetes-map-type: atomic
                                 secretKeyRef:
                                   description: Selects a key of a secret in the pod's
                                     namespace
@@ -2727,6 +2938,7 @@ spec:
                                   required:
                                   - key
                                   type: object
+                                  x-kubernetes-map-type: atomic
                               type: object
                           required:
                           - name
@@ -2753,6 +2965,28 @@ spec:
                         description: 'Optional: define resources requests and limits
                           for single pods'
                         properties:
+                          claims:
+                            description: "Claims lists the names of resources, defined
+                              in spec.resourceClaims, that are used by this container.
+                              \n This is an alpha field and requires enabling the
+                              DynamicResourceAllocation feature gate. \n This field
+                              is immutable. It can only be set for containers."
+                            items:
+                              description: ResourceClaim references one entry in PodSpec.ResourceClaims.
+                              properties:
+                                name:
+                                  description: Name must match the name of one entry
+                                    in pod.spec.resourceClaims of the Pod where this
+                                    field is used. It makes that resource available
+                                    inside a container.
+                                  type: string
+                              required:
+                              - name
+                              type: object
+                            type: array
+                            x-kubernetes-list-map-keys:
+                            - name
+                            x-kubernetes-list-type: map
                           limits:
                             additionalProperties:
                               anyOf:
@@ -2901,6 +3135,7 @@ spec:
                               required:
                               - key
                               type: object
+                              x-kubernetes-map-type: atomic
                             fieldRef:
                               description: 'Selects a field of the pod: supports metadata.name,
                                 metadata.namespace, `metadata.labels[''<KEY>'']`,
@@ -2919,6 +3154,7 @@ spec:
                               required:
                               - fieldPath
                               type: object
+                              x-kubernetes-map-type: atomic
                             resourceFieldRef:
                               description: 'Selects a resource of the container: only
                                 resources limits and requests (limits.cpu, limits.memory,
@@ -2943,6 +3179,7 @@ spec:
                               required:
                               - resource
                               type: object
+                              x-kubernetes-map-type: atomic
                             secretKeyRef:
                               description: Selects a key of a secret in the pod's
                                 namespace
@@ -2963,6 +3200,7 @@ spec:
                               required:
                               - key
                               type: object
+                              x-kubernetes-map-type: atomic
                           type: object
                       required:
                       - name
@@ -2996,6 +3234,28 @@ spec:
                     description: 'Optional: define resources requests and limits for
                       single ActiveGate pods'
                     properties:
+                      claims:
+                        description: "Claims lists the names of resources, defined
+                          in spec.resourceClaims, that are used by this container.
+                          \n This is an alpha field and requires enabling the DynamicResourceAllocation
+                          feature gate. \n This field is immutable. It can only be
+                          set for containers."
+                        items:
+                          description: ResourceClaim references one entry in PodSpec.ResourceClaims.
+                          properties:
+                            name:
+                              description: Name must match the name of one entry in
+                                pod.spec.resourceClaims of the Pod where this field
+                                is used. It makes that resource available inside a
+                                container.
+                              type: string
+                          required:
+                          - name
+                          type: object
+                        type: array
+                        x-kubernetes-list-map-keys:
+                        - name
+                        x-kubernetes-list-type: map
                       limits:
                         additionalProperties:
                           anyOf:
@@ -3115,6 +3375,7 @@ spec:
                                 contains only "value". The requirements are ANDed.
                               type: object
                           type: object
+                          x-kubernetes-map-type: atomic
                         matchLabelKeys:
                           description: MatchLabelKeys is a set of pod label keys to
                             select the pods over which spreading will be calculated.
@@ -3183,7 +3444,7 @@ spec:
                             - Ignore: nodeAffinity/nodeSelector are ignored. All nodes
                             are included in the calculations. \n If this value is
                             nil, the behavior is equivalent to the Honor policy. This
-                            is a alpha-level feature enabled by the NodeInclusionPolicyInPodTopologySpread
+                            is a beta-level feature default enabled by the NodeInclusionPolicyInPodTopologySpread
                             feature flag."
                           type: string
                         nodeTaintsPolicy:
@@ -3193,8 +3454,8 @@ spec:
                             tainted nodes for which the incoming pod has a toleration,
                             are included. - Ignore: node taints are ignored. All nodes
                             are included. \n If this value is nil, the behavior is
-                            equivalent to the Ignore policy. This is a alpha-level
-                            feature enabled by the NodeInclusionPolicyInPodTopologySpread
+                            equivalent to the Ignore policy. This is a beta-level
+                            feature default enabled by the NodeInclusionPolicyInPodTopologySpread
                             feature flag."
                           type: string
                         topologyKey:
@@ -3256,28 +3517,36 @@ spec:
             properties:
               activeGate:
                 properties:
-                  imageHash:
-                    description: ImageHash contains the last image hash seen.
+                  connectionInfoStatus:
+                    properties:
+                      endpoints:
+                        type: string
+                      lastRequest:
+                        format: date-time
+                        type: string
+                      tenantUUID:
+                        type: string
+                    type: object
+                  imageID:
                     type: string
-                  lastUpdateProbeTimestamp:
-                    description: LastUpdateProbeTimestamp defines the last timestamp
-                      when the querying for updates have been done
+                  lastProbeTimestamp:
                     format: date-time
                     type: string
+                  source:
+                    type: string
                   version:
-                    description: Version contains the version to be deployed.
                     type: string
                 type: object
-              communicationHostForClient:
-                description: CommunicationHostForClient caches a communication host
-                  specific to the api url.
+              codeModules:
                 properties:
-                  host:
+                  imageID:
                     type: string
-                  port:
-                    format: int32
-                    type: integer
-                  protocol:
+                  lastProbeTimestamp:
+                    format: date-time
+                    type: string
+                  source:
+                    type: string
+                  version:
                     type: string
                 type: object
               conditions:
@@ -3350,79 +3619,47 @@ spec:
                   - type
                   type: object
                 type: array
-              connectionInfo:
-                description: ConnectionInfo caches information about the tenant and
-                  its communication hosts
+              dynatraceApi:
                 properties:
-                  communicationHosts:
-                    items:
-                      properties:
-                        host:
-                          type: string
-                        port:
-                          format: int32
-                          type: integer
-                        protocol:
-                          type: string
-                      type: object
-                    type: array
-                  formattedCommunicationEndpoints:
-                    type: string
-                  tenantUUID:
-                    type: string
-                type: object
-              eec:
-                properties:
-                  imageHash:
-                    description: ImageHash contains the last image hash seen.
-                    type: string
-                  lastUpdateProbeTimestamp:
-                    description: LastUpdateProbeTimestamp defines the last timestamp
-                      when the querying for updates have been done
+                  lastTokenScopeRequest:
                     format: date-time
-                    type: string
-                  version:
-                    description: Version contains the version to be deployed.
                     type: string
                 type: object
               kubeSystemUUID:
                 description: KubeSystemUUID contains the UUID of the current Kubernetes
                   cluster
                 type: string
-              lastAPITokenProbeTimestamp:
-                description: LastAPITokenProbeTimestamp tracks when the last request
-                  for the API token validity was sent
+              lastTokenProbeTimestamp:
+                description: 'Deprecated: use DynatraceApiStatus.LastTokenScopeRequest
+                  instead LastTokenProbeTimestamp tracks when the last request for
+                  the API token validity was sent'
                 format: date-time
-                type: string
-              lastClusterVersionProbeTimestamp:
-                description: LastClusterVersionProbeTimestamp indicates when the cluster's
-                  version was last checked
-                format: date-time
-                type: string
-              lastDataIngestTokenProbeTimestamp:
-                description: LastDataIngestTokenProbeTimestamp tracks when the last
-                  request for the DataIngest token validity was sent
-                format: date-time
-                type: string
-              lastPaaSTokenProbeTimestamp:
-                description: LastPaaSTokenProbeTimestamp tracks when the last request
-                  for the PaaS token validity was sent
-                format: date-time
-                type: string
-              latestAgentVersionUnixDefault:
-                description: LatestAgentVersionUnixDefault caches the current agent
-                  version for unix and the default installer which is configured for
-                  the environment
-                type: string
-              latestAgentVersionUnixPaas:
-                description: LatestAgentVersionUnixDefault caches the current agent
-                  version for unix and the PaaS installer which is configured for
-                  the environment
                 type: string
               oneAgent:
                 properties:
-                  imageHash:
-                    description: ImageHash contains the last image hash seen.
+                  connectionInfoStatus:
+                    properties:
+                      communicationHosts:
+                        items:
+                          properties:
+                            host:
+                              type: string
+                            port:
+                              format: int32
+                              type: integer
+                            protocol:
+                              type: string
+                          type: object
+                        type: array
+                      endpoints:
+                        type: string
+                      lastRequest:
+                        format: date-time
+                        type: string
+                      tenantUUID:
+                        type: string
+                    type: object
+                  imageID:
                     type: string
                   instances:
                     additionalProperties:
@@ -3433,41 +3670,33 @@ spec:
                           type: string
                       type: object
                     type: object
-                  lastHostsRequestTimestamp:
-                    description: LastHostsRequestTimestamp indicates the last timestamp
-                      the Operator queried for hosts
+                  lastInstanceStatusUpdate:
                     format: date-time
                     type: string
-                  lastUpdateProbeTimestamp:
-                    description: LastUpdateProbeTimestamp defines the last timestamp
-                      when the querying for updates have been done
+                  lastProbeTimestamp:
                     format: date-time
+                    type: string
+                  source:
                     type: string
                   version:
-                    description: Version contains the version to be deployed.
                     type: string
                 type: object
               phase:
                 description: Defines the current state (Running, Updating, Error,
                   ...)
                 type: string
-              statsd:
+              synthetic:
                 properties:
-                  imageHash:
-                    description: ImageHash contains the last image hash seen.
+                  imageID:
                     type: string
-                  lastUpdateProbeTimestamp:
-                    description: LastUpdateProbeTimestamp defines the last timestamp
-                      when the querying for updates have been done
+                  lastProbeTimestamp:
                     format: date-time
                     type: string
+                  source:
+                    type: string
                   version:
-                    description: Version contains the version to be deployed.
                     type: string
                 type: object
-              tokens:
-                description: Credentials used to connect back to Dynatrace.
-                type: string
               updatedTimestamp:
                 description: UpdatedTimestamp indicates when the instance was last
                   updated
@@ -3500,7 +3729,7 @@ metadata:
   name: dynatrace-kubernetes-monitoring
   labels:
     app.kubernetes.io/name: dynatrace-operator
-    app.kubernetes.io/version: "0.9.1"
+    app.kubernetes.io/version: "0.13.0"
     app.kubernetes.io/component: activegate
 rules:
   - apiGroups:
@@ -3584,7 +3813,7 @@ metadata:
   name: dynatrace-operator
   labels:
     app.kubernetes.io/name: dynatrace-operator
-    app.kubernetes.io/version: "0.9.1"
+    app.kubernetes.io/version: "0.13.0"
     app.kubernetes.io/component: operator
 rules:
   - apiGroups:
@@ -3622,6 +3851,7 @@ rules:
       - get
       - update
       - delete
+      - list
   - apiGroups:
       - ""
     resources:
@@ -3677,7 +3907,7 @@ metadata:
   name: dynatrace-webhook
   labels:
     app.kubernetes.io/name: dynatrace-operator
-    app.kubernetes.io/version: "0.9.1"
+    app.kubernetes.io/version: "0.13.0"
     app.kubernetes.io/component: webhook
 rules:
   - apiGroups:
@@ -3744,27 +3974,14 @@ rules:
     verbs:
       - get
 ---
-# Source: dynatrace-operator/templates/Common/kubernetes-monitoring/clusterrolebinding-kubernetes-monitoring.yaml
-# Copyright 2021 Dynatrace LLC
-
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-
-#     http://www.apache.org/licenses/LICENSE-2.0
-
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Source: dynatrace-operator/templates/Common/kubernetes-monitoring/clusterrole-kubernetes-monitoring.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: dynatrace-kubernetes-monitoring
   labels:
     app.kubernetes.io/name: dynatrace-operator
-    app.kubernetes.io/version: "0.9.1"
+    app.kubernetes.io/version: "0.13.0"
     app.kubernetes.io/component: activegate
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -3775,27 +3992,14 @@ subjects:
     name: dynatrace-kubernetes-monitoring
     namespace: dynatrace
 ---
-# Source: dynatrace-operator/templates/Common/operator/clusterrolebinding-operator.yaml
-# Copyright 2021 Dynatrace LLC
-
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-
-#     http://www.apache.org/licenses/LICENSE-2.0
-
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Source: dynatrace-operator/templates/Common/operator/clusterrole-operator.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: dynatrace-operator
   labels:
     app.kubernetes.io/name: dynatrace-operator
-    app.kubernetes.io/version: "0.9.1"
+    app.kubernetes.io/version: "0.13.0"
     app.kubernetes.io/component: operator
 subjects:
   - kind: ServiceAccount
@@ -3806,27 +4010,14 @@ roleRef:
   name: dynatrace-operator
   apiGroup: rbac.authorization.k8s.io
 ---
-# Source: dynatrace-operator/templates/Common/webhook/clusterrolebinding-webhook.yaml
-# Copyright 2021 Dynatrace LLC
-
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-
-#     http://www.apache.org/licenses/LICENSE-2.0
-
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Source: dynatrace-operator/templates/Common/webhook/clusterrole-webhook.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: dynatrace-webhook
   labels:
     app.kubernetes.io/name: dynatrace-operator
-    app.kubernetes.io/version: "0.9.1"
+    app.kubernetes.io/version: "0.13.0"
     app.kubernetes.io/component: webhook
 subjects:
   - kind: ServiceAccount
@@ -3858,7 +4049,7 @@ metadata:
   namespace: dynatrace
   labels:
     app.kubernetes.io/name: dynatrace-operator
-    app.kubernetes.io/version: "0.9.1"
+    app.kubernetes.io/version: "0.13.0"
     app.kubernetes.io/component: operator
 rules:
   - apiGroups:
@@ -3918,7 +4109,7 @@ rules:
       - update
 
   - apiGroups:
-      - ""  # "" indicates the core API group
+      - ""
     resources:
       - configmaps
     verbs:
@@ -3929,7 +4120,7 @@ rules:
       - update
       - delete
   - apiGroups:
-      - ""  # "" indicates the core API group
+      - ""
     resources:
       - pods
     verbs:
@@ -3939,7 +4130,7 @@ rules:
       - delete
       - create
   - apiGroups:
-      - ""  # "" indicates the core API group
+      - ""
     resources:
       - secrets
     verbs:
@@ -3967,6 +4158,12 @@ rules:
       - get
       - list
       - watch
+  - apiGroups:
+      - ""
+    resources:
+      - pods/log
+    verbs:
+      - get
 
   - apiGroups:
       - monitoring.coreos.com
@@ -4018,7 +4215,7 @@ metadata:
   namespace: dynatrace
   labels:
     app.kubernetes.io/name: dynatrace-operator
-    app.kubernetes.io/version: "0.9.1"
+    app.kubernetes.io/version: "0.13.0"
     app.kubernetes.io/component: webhook
 rules:
   - apiGroups:
@@ -4072,20 +4269,7 @@ rules:
       - list
       - watch
 ---
-# Source: dynatrace-operator/templates/Common/operator/rolebinding-operator.yaml
-# Copyright 2021 Dynatrace LLC
-
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-
-#     http://www.apache.org/licenses/LICENSE-2.0
-
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Source: dynatrace-operator/templates/Common/operator/role-operator.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
@@ -4093,7 +4277,7 @@ metadata:
   namespace: dynatrace
   labels:
     app.kubernetes.io/name: dynatrace-operator
-    app.kubernetes.io/version: "0.9.1"
+    app.kubernetes.io/version: "0.13.0"
     app.kubernetes.io/component: operator
 subjects:
   - kind: ServiceAccount
@@ -4103,20 +4287,7 @@ roleRef:
   name: dynatrace-operator
   apiGroup: rbac.authorization.k8s.io
 ---
-# Source: dynatrace-operator/templates/Common/webhook/rolebinding-webhook.yaml
-# Copyright 2021 Dynatrace LLC
-
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-
-#     http://www.apache.org/licenses/LICENSE-2.0
-
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Source: dynatrace-operator/templates/Common/webhook/role-webhook.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
@@ -4124,7 +4295,7 @@ metadata:
   namespace: dynatrace
   labels:
     app.kubernetes.io/name: dynatrace-operator
-    app.kubernetes.io/version: "0.9.1"
+    app.kubernetes.io/version: "0.13.0"
     app.kubernetes.io/component: webhook
 subjects:
   - kind: ServiceAccount
@@ -4156,12 +4327,12 @@ metadata:
   namespace: dynatrace
   labels:
     app.kubernetes.io/name: dynatrace-operator
-    app.kubernetes.io/version: "0.9.1"
+    app.kubernetes.io/version: "0.13.0"
     app.kubernetes.io/component: webhook
 spec:
   selector:
     app.kubernetes.io/name: dynatrace-operator
-    app.kubernetes.io/version: "0.9.1"
+    app.kubernetes.io/version: "0.13.0"
     app.kubernetes.io/component: webhook
   ports:
     - port: 443
@@ -4189,7 +4360,7 @@ metadata:
   namespace: dynatrace
   labels:
     app.kubernetes.io/name: dynatrace-operator
-    app.kubernetes.io/version: "0.9.1"
+    app.kubernetes.io/version: "0.13.0"
     app.kubernetes.io/component: operator
 spec:
   replicas: 1
@@ -4201,9 +4372,11 @@ spec:
     type: RollingUpdate
   template:
     metadata:
+      annotations:
+        dynatrace.com/inject: "false"
       labels:
         app.kubernetes.io/name: dynatrace-operator
-        app.kubernetes.io/version: "0.9.1"
+        app.kubernetes.io/version: "0.13.0"
         app.kubernetes.io/component: operator
         name: dynatrace-operator
     spec:
@@ -4212,7 +4385,7 @@ spec:
           args:
             - operator
           # Replace this with the built image name
-          image: acrvdoottazassedev001.azurecr.io/samples/dynatrace:latest
+          image: acrvdoottazassedev001.azurecr.io/dynatrace/dynatrace-operator:v0.13.0
           imagePullPolicy: Always
           env:
             - name: POD_NAMESPACE
@@ -4236,13 +4409,6 @@ spec:
           volumeMounts:
             - name: tmp-cert-dir
               mountPath: /tmp/dynatrace-operator
-          readinessProbe:
-            httpGet:
-              path: /livez
-              port: server-port
-              scheme: HTTP
-            initialDelaySeconds: 15
-            periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /livez
@@ -4250,18 +4416,27 @@ spec:
               scheme: HTTP
             initialDelaySeconds: 15
             periodSeconds: 10
+          startupProbe:
+            exec:
+              command:
+              - /usr/local/bin/dynatrace-operator
+              - startup-probe
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 1
+          
           securityContext:
-            seccompProfile:
-              type: RuntimeDefault
-            privileged: false
             allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
-            runAsNonRoot: true
-            runAsUser: 1001
-            runAsGroup: 1001
             capabilities:
               drop:
-                - ALL
+              - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 1001
+            runAsNonRoot: true
+            runAsUser: 1001
+            seccompProfile:
+              type: RuntimeDefault
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -4272,6 +4447,7 @@ spec:
                     values:
                       - amd64
                       - arm64
+                      - ppc64le
                   - key: kubernetes.io/os
                     operator: In
                     values:
@@ -4286,6 +4462,9 @@ spec:
           effect: NoSchedule
         - key: kubernetes.io/arch
           value: amd64
+          effect: NoSchedule
+        - key: kubernetes.io/arch
+          value: ppc64le
           effect: NoSchedule
 ---
 # Source: dynatrace-operator/templates/Common/webhook/deployment-webhook.yaml
@@ -4309,7 +4488,7 @@ metadata:
   namespace: dynatrace
   labels:
     app.kubernetes.io/name: dynatrace-operator
-    app.kubernetes.io/version: "0.9.1"
+    app.kubernetes.io/version: "0.13.0"
     app.kubernetes.io/component: webhook
 spec:
   replicas: 2
@@ -4323,10 +4502,11 @@ spec:
   template:
     metadata:
       annotations:
+        dynatrace.com/inject: "false"
         kubectl.kubernetes.io/default-container: webhook
       labels:
         app.kubernetes.io/name: dynatrace-operator
-        app.kubernetes.io/version: "0.9.1"
+        app.kubernetes.io/version: "0.13.0"
         app.kubernetes.io/component: webhook
         internal.dynatrace.com/component: webhook
         internal.dynatrace.com/app: webhook
@@ -4337,15 +4517,15 @@ spec:
           whenUnsatisfiable: ScheduleAnyway
           labelSelector:
             matchLabels:
-              app.kubernetes.io/component: webhook
-              app.kubernetes.io/name: dynatrace-operator
+              internal.dynatrace.com/component: webhook
+              internal.dynatrace.com/app: webhook
         - maxSkew: 1
           topologyKey: "kubernetes.io/hostname"
           whenUnsatisfiable: DoNotSchedule
           labelSelector:
             matchLabels:
-              app.kubernetes.io/component: webhook
-              app.kubernetes.io/name: dynatrace-operator
+              internal.dynatrace.com/component: webhook
+              internal.dynatrace.com/app: webhook
       volumes:
       - emptyDir: {}
         name: certs-dir
@@ -4359,6 +4539,7 @@ spec:
                     values:
                       - amd64
                       - arm64
+                      - ppc64le
                   - key: kubernetes.io/os
                     operator: In
                     values:
@@ -4369,7 +4550,7 @@ spec:
             - webhook-server
             # OLM mounts the certificates here, so we reuse it for simplicity
             - --certs-dir=/tmp/k8s-webhook-server/serving-certs/
-          image: acrvdoottazassedev001.azurecr.io/samples/dynatrace:latest
+          image: acrvdoottazassedev001.azurecr.io/dynatrace/dynatrace-operator:v0.13.0
           imagePullPolicy: Always
           env:
             - name: POD_NAMESPACE
@@ -4382,12 +4563,23 @@ spec:
                   fieldPath: metadata.name
           readinessProbe:
             httpGet:
+              path: /readyz
+              port: livez
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
               path: /livez
-              port: server-port
-              scheme: HTTPS
+              port: livez
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 10
           ports:
             - name: server-port
               containerPort: 8443
+            - name: livez
+              containerPort: 10080
           resources:
             requests:
               cpu: 300m
@@ -4399,17 +4591,17 @@ spec:
             - name: certs-dir
               mountPath: /tmp/k8s-webhook-server/serving-certs/
           securityContext:
-            seccompProfile:
-              type: RuntimeDefault
-            privileged: false
             allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
-            runAsNonRoot: true
-            runAsUser: 1001
-            runAsGroup: 1001
             capabilities:
               drop:
-                - ALL
+              - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 1001
+            runAsNonRoot: true
+            runAsUser: 1001
+            seccompProfile:
+              type: RuntimeDefault
       serviceAccountName: dynatrace-webhook
       tolerations:
         - key: kubernetes.io/arch
@@ -4417,6 +4609,9 @@ spec:
           effect: NoSchedule
         - key: kubernetes.io/arch
           value: amd64
+          effect: NoSchedule
+        - key: kubernetes.io/arch
+          value: ppc64le
           effect: NoSchedule
 ---
 # Source: dynatrace-operator/templates/Common/webhook/mutatingwebhookconfiguration.yaml
@@ -4439,7 +4634,7 @@ metadata:
   name: dynatrace-webhook
   labels:
     app.kubernetes.io/name: dynatrace-operator
-    app.kubernetes.io/version: "0.9.1"
+    app.kubernetes.io/version: "0.13.0"
     app.kubernetes.io/component: webhook
 webhooks:
   - name: webhook.pod.dynatrace.com
@@ -4501,7 +4696,7 @@ metadata:
   name: dynatrace-webhook
   labels:
     app.kubernetes.io/name: dynatrace-operator
-    app.kubernetes.io/version: "0.9.1"
+    app.kubernetes.io/version: "0.13.0"
     app.kubernetes.io/component: webhook
 webhooks:
   - admissionReviewVersions:
@@ -4524,5 +4719,5 @@ webhooks:
         resources:
           - dynakubes
     name: webhook.dynatrace.com
-    timeoutSeconds: 2
+    timeoutSeconds: 10
     sideEffects: None
